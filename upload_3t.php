@@ -9,7 +9,6 @@ $U_WEB_DEL = $U_WEB . "sys/takedown_3t.php?u=";
 //print_r($_FILES);
 uploadFile();
 
-
 function uploadFile() {
     global $U_PATH, $U_WEB, $U_MAXCALC, $U_MAXON;
     $tmp_rstring = randomname();
@@ -26,7 +25,7 @@ function uploadFile() {
         uploadFile();
         exit();
     } else {
-        if(!($_FILES["file"]["type"] == "text/html" || $_FILES["file"]["type"] == "application/octet-stream")){
+        if (!($_FILES["file"]["type"] == "text/html" || $_FILES["file"]["type"] == "application/octet-stream")) {
             move_uploaded_file($_FILES["file"]["tmp_name"], $U_PATH . $tmp_name); // flytt fra tmp til upload
             u_log($tmp_name);
             header('Location: ' . $U_WEB . $tmp_name);
@@ -50,7 +49,7 @@ function u_log($U_FILE) { // logs what was uploaded from who
     global $U_PATH, $U_WEB, $U_WEB_DEL;
     $fh = fopen($U_PATH . "sys/log.html", "a"); // setter verdien " �pne fil m stream MED write only -> nederst
     $fh_log_html = "<p> " . $_SERVER["REMOTE_ADDR"] . ":" . $_SERVER["REMOTE_PORT"] . " " . date("d.m H:i:s") .
-                    " <a href=\"" . $U_WEB . $U_FILE . "\">" . $U_FILE . "</a> <a href=\"" . $U_WEB_DEL . $U_FILE . "\"> [Delete]</a>" ."\r\n";
+            " <a href=\"" . $U_WEB . $U_FILE . "\">" . $U_FILE . "</a> <a href=\"" . $U_WEB_DEL . $U_FILE . "\"> [Delete]</a>" . "\r\n";
 
     fwrite($fh, $fh_log_html); // skriv string til fil i $fh
     fclose($fh); // look streamen til $fh filen
