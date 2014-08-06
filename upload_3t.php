@@ -5,7 +5,7 @@ $U_WEB = "http://slt.pw/"; //siden
 $U_MAXSIZE = 40; //max size i mib
 $U_MAXCALC = 1024 * 1024 * $U_MAXSIZE;
 $U_MAXON = 0; // tar av cap pga var noen issues
-$U_WEB_DEL = $U_WEB . "sys/takedown_3t.php?u="; 
+$U_WEB_DEL = $U_WEB . "sys/takedown_3t.php?u=";
 //print_r($_FILES); //print all info  for debug ofc
 uploadFile();
 
@@ -29,10 +29,12 @@ function uploadFile() {
         if(!($_FILES["file"]["type"] == "text/html" || $_FILES["file"]["type"] == "application/octet-stream")){
             move_uploaded_file($_FILES["file"]["tmp_name"], $U_PATH . $tmp_name); // flytt fra tmp til upload
             u_log($tmp_name);
-            echo $U_WEB . $tmp_name; // echo linken
+            //echo $U_WEB . $tmp_name; // echo linken
+            header('Location: ' . $U_WEB . $tmp_name);
             exit();
         }else {
-            echo $U_WEB . "slt.html";
+            //echo $U_WEB . "slt.html";
+            header('Location: ' . $U_WEB . $tmp_name);
         }
     }
 }
@@ -46,18 +48,18 @@ function randomname($length = 3) {
     return $randomstring;
 }
 
-function u_log($U_FILE) { // logs what was uploaded from who 
+function u_log($U_FILE) { // logs what was uploaded from who
     global $U_PATH, $U_WEB, $U_WEB_DEL;
-    $fh = fopen($U_PATH . "sys/log.html", "a"); // setter verdien " åpne fil m stream MED write only -> nederst
+    $fh = fopen($U_PATH . "sys/log.html", "a"); // setter verdien " ï¿½pne fil m stream MED write only -> nederst
     $fh_log_html = "<p> " . $_SERVER["REMOTE_ADDR"] . ":" . $_SERVER["REMOTE_PORT"] . " " . date("d.m H:i:s") .
                     " <a href=\"" . $U_WEB . $U_FILE . "\">" . $U_FILE . "</a> <a href=\"" . $U_WEB_DEL . $U_FILE . "\"> [Delete]</a>" ."\r\n";
 
     fwrite($fh, $fh_log_html); // skriv string til fil i $fh
     fclose($fh); // look streamen til $fh filen
-    
+
     $fh = fopen($U_PATH . "sys/log.cfg", "a");
     fwrite($fh, $U_FILE . "=" . $_SERVER["REMOTE_ADDR"] . "\n");
     fclose($fh);
 }
 
-?> 
+?>
