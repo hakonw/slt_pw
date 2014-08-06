@@ -6,7 +6,7 @@ $U_MAXSIZE = 40; //max size i mib
 $U_MAXCALC = 1024 * 1024 * $U_MAXSIZE;
 $U_MAXON = 0; // tar av cap pga var noen issues
 $U_WEB_DEL = $U_WEB . "sys/takedown_3t.php?u=";
-//print_r($_FILES); //print all info  for debug ofc
+//print_r($_FILES);
 uploadFile();
 
 
@@ -29,11 +29,9 @@ function uploadFile() {
         if(!($_FILES["file"]["type"] == "text/html" || $_FILES["file"]["type"] == "application/octet-stream")){
             move_uploaded_file($_FILES["file"]["tmp_name"], $U_PATH . $tmp_name); // flytt fra tmp til upload
             u_log($tmp_name);
-            //echo $U_WEB . $tmp_name; // echo linken
             header('Location: ' . $U_WEB . $tmp_name);
             exit();
-        }else {
-            //echo $U_WEB . "slt.html";
+        } else {
             header('Location: ' . $U_WEB . $tmp_name);
         }
     }
