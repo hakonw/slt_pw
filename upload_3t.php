@@ -28,10 +28,12 @@ function uploadFile() {
         if (!($_FILES["file"]["type"] == "text/html" || $_FILES["file"]["type"] == "application/octet-stream")) {
             move_uploaded_file($_FILES["file"]["tmp_name"], $U_PATH . $tmp_name); // flytt fra tmp til upload
             u_log($tmp_name);
-            header('Location: ' . $U_WEB . $tmp_name);
+            //header('Location: ' . $U_WEB . $tmp_name); funker ikke i shareX men åpner linken automatisk i inbrowser
+            echo $U_WEB . $tmp_name; // echo linken
             exit();
         } else {
-            header('Location: ' . $U_WEB . $tmp_name);
+            //header('Location: ' . $U_WEB . $tmp_name);
+            echo $U_WEB . "slt.html"; // echo linken
         }
     }
 }
