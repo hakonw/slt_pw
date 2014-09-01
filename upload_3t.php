@@ -4,6 +4,7 @@ $U_PATH = "/var/www/i/";  //her kunne jeg også ha bare ./upload tror jeg
 $U_PATH_LOG = "sys/"; // path til loggen
 $U_PATH_ERROR = "sys/error/";
 $U_WEB = "http://slt.pw/"; //siden
+$U_WEB_SHORT = "u/";
 $U_MAXSIZE = 40; //max size i mib
 $U_MAXCALC = 1024 * 1024 * $U_MAXSIZE;
 $U_MAXON = 0; // tar av cap pga var noen issues
@@ -24,13 +25,12 @@ function uploadFile() {
     } elseif ($_FILES["file"]["size"] >= $U_MAXCALC && $U_MAXON === 1) { // om filen er større enn $U_MAXSIZE Mib
         echo $U_WEB . $U_PATH_ERROR . "1?Size=" . $U_MAXCALC; // gi max size error
         exit();
-    } elseif (file_exists($tmp_rstring)) {
+    } elseif (file_exists($U_PATH . $tmp_rstring) || file_exists($U_PATH . $tmp_name)) {
         uploadFile();
         exit();
     } else {
         if (!($_FILES["file"]["type"] == "text/html" || $_FILES["file"]["type"] == "application/octet-stream")) { //file type != php[application/octet-stream] eller html[text/html]
             if ($_FILES["file"]["type"] == "text/plain"){ // check if text = link
-
               if (u_link()){
                 exit();
               }
@@ -73,9 +73,29 @@ function u_log($U_FILE) { // logs what was uploaded from who
     fclose($fh);
 }
 
-function u_link(){
+function u_link(){ // sjekk om filen er en url og WOW overkompiserte det, men shorta det ned
+  $u_text_file = file_get_contents($_FILES["file"]["tmp_name"]);
+  if (filter_var($u_text_file, FILTER_VALIDATE_URL)){
+    shorturl($u_text_file);
+    return true;
+  }else{
+    return false;
+  }
+}
 
-return true;
+function shorturl($str_url){ // laget for å kunne shorte urlr
+  global $U_PATH, $U_WEB_SHORT, $U_WEB;
+  $tmp_rstring = randomname();
+  if (file_exists($U_PATH . $U_WEB_SHORT . $tmp_rstring)) {
+    shorturl($str_url);
+    exit();
+  }
+  $fh = fopen($U_PATH . $U_WEB_SHORT . $tmp_rstring, "a");
+  $fh_msg = "<meta http-equiv=\"refresh\" content=\"0; url=" . $str_url .  "\">";
+  fwrite($fh, $fh_msg);
+  fclose($fh);
+  echo $U_WEB . $U_WEB_SHORT . $tmp_rstring;
+
 }
 
 ?>
