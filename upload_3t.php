@@ -1,12 +1,15 @@
 <?php
 
 $U_PATH = "/var/www/i/";  //her kunne jeg også ha bare ./upload tror jeg
+$U_PATH_LOG = "sys/"; // path til loggen
+$U_PATH_ERROR = "sys/error/";
 $U_WEB = "http://slt.pw/"; //siden
 $U_MAXSIZE = 40; //max size i mib
 $U_MAXCALC = 1024 * 1024 * $U_MAXSIZE;
 $U_MAXON = 0; // tar av cap pga var noen issues
 $U_WEB_DEL = $U_WEB . "sys/takedown_3t.php?u=";
 //print_r($_FILES);
+
 uploadFile();
 
 function uploadFile() {
@@ -16,24 +19,33 @@ function uploadFile() {
     $tmp_name = $tmp_rstring . "." . $path_info["extension"];
 
     if ($_FILES["file"]["error"] > 0 || empty($_FILES["file"]["name"])) { //sjekke om det ikke er en error
-        echo $U_WEB . "sys/error/" . $_FILES["file"]["error"];  // echo erroren
+        echo $U_WEB . $U_PATH_ERROR . $_FILES["file"]["error"];  // echo erroren
         exit();
     } elseif ($_FILES["file"]["size"] >= $U_MAXCALC && $U_MAXON === 1) { // om filen er større enn $U_MAXSIZE Mib
-        echo $U_WEB . "sys/error/1?Size=" . $U_MAXCALC; // gi max size error
+        echo $U_WEB . $U_PATH_ERROR . "1?Size=" . $U_MAXCALC; // gi max size error
         exit();
     } elseif (file_exists($tmp_rstring)) {
         uploadFile();
         exit();
     } else {
-        if (!($_FILES["file"]["type"] == "text/html" || $_FILES["file"]["type"] == "application/octet-stream")) {
+        if (!($_FILES["file"]["type"] == "text/html" || $_FILES["file"]["type"] == "application/octet-stream")) { //file type != php[application/octet-stream] eller html[text/html]
+            if ($_FILES["file"]["type"] == "text/plain"){ // check if text = link
+
+              if (u_link()){
+                exit();
+              }
+            }
             move_uploaded_file($_FILES["file"]["tmp_name"], $U_PATH . $tmp_name); // flytt fra tmp til upload
             u_log($tmp_name);
-            //header('Location: ' . $U_WEB . $tmp_name); funker ikke i shareX men åpner linken automatisk i inbrowser
-            echo $U_WEB . $tmp_name; // echo linken
+            if(!(empty($_REQUEST["inbrowser"]))){
+                header("Location: " . $U_WEB . $tmp_name); //funker ikke i shareX men åpner linken automatisk i inbrowser
+            } else {
+                echo $U_WEB . $tmp_name; // echo linken
+            }
             exit();
         } else {
-            //header('Location: ' . $U_WEB . $tmp_name);
             echo $U_WEB . "slt.html"; // echo linken
+            exit();
         }
     }
 }
@@ -48,17 +60,22 @@ function randomname($length = 3) {
 }
 
 function u_log($U_FILE) { // logs what was uploaded from who
-    global $U_PATH, $U_WEB, $U_WEB_DEL;
-    $fh = fopen($U_PATH . "sys/log.html", "a"); // setter verdien " �pne fil m stream MED write only -> nederst
+    global $U_PATH, $U_WEB, $U_WEB_DEL, $U_PATH_LOG;
+    $fh = fopen($U_PATH .  $U_PATH_LOG . "log.html", "a"); // setter verdien " �pne fil m stream MED write only -> nederst
     $fh_log_html = "<p> " . $_SERVER["REMOTE_ADDR"] . ":" . $_SERVER["REMOTE_PORT"] . " " . date("d.m H:i:s") .
             " <a href=\"" . $U_WEB . $U_FILE . "\">" . $U_FILE . "</a> <a href=\"" . $U_WEB_DEL . $U_FILE . "\"> [Delete]</a>" . "\r\n";
 
     fwrite($fh, $fh_log_html); // skriv string til fil i $fh
     fclose($fh); // look streamen til $fh filen
 
-    $fh = fopen($U_PATH . "sys/log.cfg", "a");
+    $fh = fopen($U_PATH . $U_PATH_LOG . "log.cfg", "a");
     fwrite($fh, $U_FILE . "=" . $_SERVER["REMOTE_ADDR"] . "\n");
     fclose($fh);
+}
+
+function u_link(){
+
+return true;
 }
 
 ?>
