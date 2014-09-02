@@ -29,7 +29,7 @@ function uploadFile() {
         uploadFile();
         exit();
     } else {
-        if (!($_FILES["file"]["type"] == "text/html" || $_FILES["file"]["type"] == "application/octet-stream")) { //file type != php[application/octet-stream] eller html[text/html]
+        if (!($_FILES["file"]["type"] == "text/html" || $_FILES["file"]["type"] == "application/octet-stream") || $path_info["extension"] == "png") { //file type != php[application/octet-stream] eller html[text/html]
             if ($_FILES["file"]["type"] == "text/plain"){ // check if text = link
               if (u_link()){
                 exit();
