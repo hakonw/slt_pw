@@ -1,5 +1,4 @@
 <?php
-
 $U_PATH = "/var/www/i/"; //her kunne jeg også ha bare ./upload tror jeg
 $U_PATH_LOG = "/var/www/sys/"; // path til loggen
 $U_PATH_ERROR = "error/";
@@ -8,8 +7,14 @@ $U_WEB_SYS = "http://s.slt.pw/";
 $U_MAXSIZE = 40; //max size i mib
 $U_MAXCALC = 1024 * 1024 * $U_MAXSIZE;
 $U_MAXON = 0; // tar av cap pga var noen issues
-$U_WEB_DEL = $U_WEB . "sys/takedown_3t.php?u=";
-
+$cone = ""; // init verdien
+$sql_cfg = array(
+    "host" => "localhost",
+    "username" => "yukiyuki",
+    "password" => "yuki69",
+    "dbname" => "db_slt",
+    "table" => "log"
+); //sql settings
 // print_r($_FILES);
 
 uploadFile();
@@ -21,29 +26,33 @@ function uploadFile(){
     $tmp_name = $tmp_rstring . "." . $path_info["extension"];
     if ($_FILES["file"]["error"] > 0) { //sjekke om det ikke er en error
         echo $U_WEB_SYS . $U_PATH_ERROR . $_FILES["file"]["error"]; // echo erroren
-        exit();
     }
     elseif (empty($_FILES["file"]["name"])) {
         echo $U_WEB_SYS . $U_PATH_ERROR . "EMPTY_FILE_NAME";
     }
     elseif ($_FILES["file"]["size"] >= $U_MAXCALC && $U_MAXON === 1) { // om filen er større enn $U_MAXSIZE Mib
         echo $U_WEB_SYS . $U_PATH_ERROR . "1?Size=" . $U_MAXCALC; // gi max size error
-        exit();
     }
     elseif (file_exists($U_PATH . $tmp_rstring) || file_exists($U_PATH . $tmp_name)) {
         uploadFile();
-        exit();
-    } else {
-        move_uploaded_file($_FILES["file"]["tmp_name"], $U_PATH . $tmp_name); // flytt fra tmp til upload
-        u_log($tmp_name);
+    }
+    else {
+        if (sqlconnect()) {
+            move_uploaded_file($_FILES["file"]["tmp_name"], $U_PATH . $tmp_name); // flytt fra tmp til upload
+            u_sql_log($tmp_name);
+        }
+        else {
+            exit();
+        }
         if (!(empty($_REQUEST["inbrowser"]))) {
             header("Location: " . $U_WEB . $tmp_name); //funker ikke i shareX men åpner linken automatisk i inbrowser
-        } else {
+        }
+        else {
             echo $U_WEB . $tmp_name; // echo linken
         }
-
-        exit();
     }
+
+    exit();
 }
 
 function randomname($length = 3){
@@ -56,15 +65,30 @@ function randomname($length = 3){
     return $randomstring;
 }
 
-function u_log($U_FILE){ // logs what was uploaded from who
-    global $U_WEB, $U_WEB_DEL, $U_PATH_LOG;
-    $fh = fopen($U_PATH_LOG . "log.html", "a"); // setter verdien " ?pne fil m stream MED write only -> nederst
-    $fh_log_html = "<p> " . $_SERVER["REMOTE_ADDR"] . ":" . $_SERVER["REMOTE_PORT"] . " " . date("d.m H:i:s") . " <a href=\"" . $U_WEB . $U_FILE . "\">" . $U_FILE . "</a> <a href=\"" . $U_WEB_DEL . $U_FILE . "\"> [Broken Delete]</a>" . "\r\n";
-    fwrite($fh, $fh_log_html); // skriv string til fil i $fh
-    fclose($fh); // look streamen til $fh filen
-    $fh = fopen($U_PATH_LOG . "log.cfg", "a");
-    fwrite($fh, $U_FILE . "=" . $_SERVER["REMOTE_ADDR"] . "\n");
-    fclose($fh);
+function u_sql_log($u_file){
+    global $cone, $sql_cfg;
+    $tmp_date = date("d.m");
+    $tmp_time = date("H:i:s");
+    $tmp_ip = $_SERVER["REMOTE_ADDR"];
+
+    // need to beautify this
+    mysqli_query($cone, "INSERT INTO " . $sql_cfg["table"] . " (ip, date, time, file)
+    VALUES (\"" . $tmp_ip . "\",
+    \"" . $tmp_date . "\",
+    \"" . $tmp_time . "\",
+    \"" . $u_file . "\"
+    )");
+    mysqli_close($cone); //close connection
 }
 
+function sqlconnect(){
+    global $cone, $sql_cfg;
+    $cone = mysqli_connect($sql_cfg["host"], $sql_cfg["username"], $sql_cfg["password"], $sql_cfg["dbname"]); // Create connection
+    if (mysqli_connect_errno()) { // Check connection
+        echo "SQLerror:" . mysqli_connect_error();
+        return false;
+    }
+
+    return true;
+}
 ?>
